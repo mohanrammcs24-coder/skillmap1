@@ -1,10 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-dotenv.config(); 
+
+dotenv.config();
+
 const db = require("./db");
 const app = express();
-const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -177,6 +178,13 @@ function analyzeRole(knownSkills, targetRole, interest) {
   return scored;
 }
 
+app.get("/", (req, res) => {
+  res.send("Backend is running");
+});
+app.get("/api/health", (req, res) => {
+  res.json({ success: true, message: "Backend is working" });
+});
+
 app.get("/api/reports", async (req, res) => {
   try {
     const [rows] = await db.query(`
@@ -197,7 +205,10 @@ app.get("/api/reports", async (req, res) => {
 
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching reports", error: error.message });
+    res.status(500).json({
+      message: "Error fetching reports",
+      error: error.message
+    });
   }
 });
 
@@ -206,13 +217,17 @@ app.post("/api/analyze", async (req, res) => {
     const { name, degree, interestArea, targetRole, knownSkills } = req.body;
 
     if (!name || !degree || !interestArea || !knownSkills || !Array.isArray(knownSkills)) {
-      return res.status(400).json({ message: "Please fill all required fields correctly" });
+      return res.status(400).json({
+        message: "Please fill all required fields correctly"
+      });
     }
 
     const results = analyzeRole(knownSkills, targetRole, interestArea);
 
     if (results.length === 0) {
-      return res.status(404).json({ message: "No matching roles found" });
+      return res.status(404).json({
+        message: "No matching roles found"
+      });
     }
 
     const best = results[0];
@@ -278,6 +293,9 @@ app.post("/api/analyze", async (req, res) => {
     });
   }
 });
+
+const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
+  console.log(`Backend running on port ${PORT}`);
 });
